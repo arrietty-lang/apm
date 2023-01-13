@@ -133,6 +133,29 @@ func GetGithubLatestRelease(author, repoName string) (*SimpleRelease, error) {
 	}, nil
 }
 
+func GetGithubReleaseSpecificVersion(author, repoName, version string) (*SimpleRelease, error) {
+	exist, err := ExistsGithubRelease(author, repoName, version)
+	if err != nil {
+		return nil, err
+	}
+	if !exist {
+		return nil, fmt.Errorf("repository of specific version not found: %v/%v @ %v", author, repoName, version)
+	}
+	// 特定のバージョンを探すAPIを調べるのがめんどいので、いったん全部取得して、一致するものを返すようにします
+	// todo : まともなものを作る
+	releases, err := GetGitHubReleases(author, repoName)
+	if err != nil {
+		return nil, err
+	}
+	for _, rel := range releases {
+		if rel.TagName == version {
+			return rel, nil
+		}
+	}
+
+	return nil, fmt.Errorf("unknown err")
+}
+
 func ExistsGithubRelease(author, repoName, tagName string) (bool, error) {
 	repos, err := GetGitHubReleases(author, repoName)
 	if err != nil {
