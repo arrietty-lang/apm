@@ -57,7 +57,7 @@ func Get(repoUrl string) error {
 		return fmt.Errorf("unsupported host: %v", url)
 	}
 
-	if !IsRepositorySpecificVersionInstalled(host, author, repoName, version) {
+	if IsRepositorySpecificVersionInstalled(host, author, repoName, version) {
 		return fmt.Errorf("already installed")
 	}
 	err := InstallTarGz(repo.TarGzUrl, host, author, repoName, version)
