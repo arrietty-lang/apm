@@ -9,7 +9,8 @@ import (
 
 // GetApmPath パッケージマネージャのルートパスを取得
 func GetApmPath() string {
-	return os.Getenv("ARRIETTY_PM_PATH")
+	p, _ := os.Getwd()
+	return p
 }
 
 func Get(repoUrl string) error {
@@ -53,7 +54,7 @@ func Get(repoUrl string) error {
 		return fmt.Errorf("unsupported host: %v", url)
 	}
 
-	err := DownloadTarGz(repo.TarGzUrl, host, repoName, version)
+	err := InstallTarGz(repo.TarGzUrl, host, author, repoName, version)
 	if err != nil {
 		return err
 	}
