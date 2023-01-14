@@ -1,5 +1,7 @@
 # APM
-Arrietty Package Manager
+Arrietty Package Manager  
+PLEASE Set ENV ARRIETTY_PM_PATH.  
+The recommended is the root of this repository.
 
 ## Commands
 - get  
