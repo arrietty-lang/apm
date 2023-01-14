@@ -10,7 +10,7 @@ import (
 // インストールしたことのあるホスティングサービスの一覧を取得
 // ex) github.com, ...
 func getHostingServicesInstalled() ([]string, error) {
-	apmPath := GetApmPath()
+	apmPath := GetApmPackagesPath()
 
 	var hosts []string
 
@@ -31,7 +31,7 @@ func getHostingServicesInstalled() ([]string, error) {
 // ホスティングサービスにインストールされているリポジトリ作者一覧を取得
 // getHostingServicesInstalledで取得したものを使用する
 func getRepositoryAuthorsInstalled(hostingService string) ([]string, error) {
-	hostDir := filepath.Join(GetApmPath(), hostingService)
+	hostDir := filepath.Join(GetApmPackagesPath(), hostingService)
 
 	var authors []string
 
@@ -53,7 +53,7 @@ func getRepositoryAuthorsInstalled(hostingService string) ([]string, error) {
 // `repoName@version`というフォーマットになってると思う
 // getRepositoryAuthorsInstalledで取得したものを使う
 func getRepositoryNameAtVersionsInstalled(hostingService, author string) ([]string, error) {
-	hostDir := filepath.Join(GetApmPath(), hostingService)
+	hostDir := filepath.Join(GetApmPackagesPath(), hostingService)
 	authorDir := filepath.Join(hostDir, author)
 
 	files, err := os.ReadDir(authorDir)
@@ -71,15 +71,15 @@ func getRepositoryNameAtVersionsInstalled(hostingService, author string) ([]stri
 	return repos, nil
 }
 
-// GetRepository リポジトリの詳細を取得
-func GetRepository(hostingService, author, repoNameAtVersion string) (*Repository, error) {
+// GetRepositoryInstalled リポジトリの詳細を取得
+func GetRepositoryInstalled(hostingService, author, repoNameAtVersion string) (*Repository, error) {
 	// 適切なフォーマットか確認
 	if !strings.Contains(repoNameAtVersion, "@") {
 		return nil, fmt.Errorf("invalid repository id format, expect: 'repoName@repoVersion', but reserve %s", repoNameAtVersion)
 	}
 
 	// 存在確認
-	pkgJsonPath := filepath.Join(GetApmPath(), hostingService, author, repoNameAtVersion, "pkg.json")
+	pkgJsonPath := filepath.Join(GetApmPackagesPath(), hostingService, author, repoNameAtVersion, "pkg.json")
 	if !existsFile(pkgJsonPath) {
 		return nil, fmt.Errorf("pkg.json not found: %s", pkgJsonPath)
 	}
@@ -109,8 +109,8 @@ func GetRepository(hostingService, author, repoNameAtVersion string) (*Repositor
 	}, nil
 }
 
-// GetRepositoriesByAuthor リポジトリの詳細の一覧を作者から取得
-func GetRepositoriesByAuthor(hostingService, author string) ([]*Repository, error) {
+// GetRepositoriesInstalledByAuthor リポジトリの詳細の一覧を作者から取得
+func GetRepositoriesInstalledByAuthor(hostingService, author string) ([]*Repository, error) {
 	repoNameAtVersions, err := getRepositoryNameAtVersionsInstalled(hostingService, author)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get installed repositories: %v", err)
@@ -119,7 +119,7 @@ func GetRepositoriesByAuthor(hostingService, author string) ([]*Repository, erro
 	var repos []*Repository
 
 	for _, repoNV := range repoNameAtVersions {
-		repo, err := GetRepository(hostingService, author, repoNV)
+		repo, err := GetRepositoryInstalled(hostingService, author, repoNV)
 		if err != nil {
 			return nil, fmt.Errorf("failed to get repository data: %v", err)
 		}
@@ -129,13 +129,13 @@ func GetRepositoriesByAuthor(hostingService, author string) ([]*Repository, erro
 	return repos, nil
 }
 
-// GetMultipleVersionRepositoriesByRepoName リポジトリ名から、複数のバージョンのリポジトリを検索する
+// GetMultipleVersionRepositoriesInstalledByRepoName リポジトリ名から、複数のバージョンのリポジトリを検索する
 // x@0.0.1
 // x@0.0.2
 // x@0.0.3
 // の一覧をxから検索
-func GetMultipleVersionRepositoriesByRepoName(hostingService, author, repoName string) ([]*Repository, error) {
-	repos, err := GetRepositoriesByAuthor(hostingService, author)
+func GetMultipleVersionRepositoriesInstalledByRepoName(hostingService, author, repoName string) ([]*Repository, error) {
+	repos, err := GetRepositoriesInstalledByAuthor(hostingService, author)
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +153,7 @@ func GetMultipleVersionRepositoriesByRepoName(hostingService, author, repoName s
 // IsRepositoryInstalledByRepoName リポジトリ名からインストールされているかを取得する
 // バージョンは問わない
 func IsRepositoryInstalledByRepoName(hostingService, author, repoName string) bool {
-	hostDir := filepath.Join(GetApmPath(), hostingService)
+	hostDir := filepath.Join(GetApmPackagesPath(), hostingService)
 	if !existsFile(hostDir) {
 		return false
 	}
@@ -163,7 +163,7 @@ func IsRepositoryInstalledByRepoName(hostingService, author, repoName string) bo
 		return false
 	}
 
-	repos, err := GetRepositoriesByAuthor(hostingService, author)
+	repos, err := GetRepositoriesInstalledByAuthor(hostingService, author)
 	if err != nil {
 		return false
 	}
@@ -183,7 +183,7 @@ func IsRepositorySpecificVersionInstalled(hostingService, author, repoName, repo
 		return false
 	}
 
-	multipleVersions, err := GetMultipleVersionRepositoriesByRepoName(hostingService, author, repoName)
+	multipleVersions, err := GetMultipleVersionRepositoriesInstalledByRepoName(hostingService, author, repoName)
 	if err != nil {
 		return false
 	}
@@ -196,3 +196,7 @@ func IsRepositorySpecificVersionInstalled(hostingService, author, repoName, repo
 
 	return false
 }
+
+//func UninstallRepository(hostingService, author, repoName string) error {
+//
+//}

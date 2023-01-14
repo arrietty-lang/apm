@@ -4,18 +4,21 @@ import (
 	"fmt"
 	"github.com/arrietty-lang/apm/api"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
 // GetApmPath パッケージマネージャのルートパスを取得
 func GetApmPath() string {
-	p, _ := os.Getwd()
-	return p
+	return os.Getenv("ARRIETTY_PM_PATH")
+}
+
+func GetApmPackagesPath() string {
+	return filepath.Join(GetApmPath(), "packages")
 }
 
 func Get(repoUrl string) error {
 	// バージョン指定があるかチェック
-
 	var url string
 	var version string
 	if strings.Contains(repoUrl, "@") {
@@ -54,6 +57,9 @@ func Get(repoUrl string) error {
 		return fmt.Errorf("unsupported host: %v", url)
 	}
 
+	if !IsRepositorySpecificVersionInstalled(host, author, repoName, version) {
+		return fmt.Errorf("already installed")
+	}
 	err := InstallTarGz(repo.TarGzUrl, host, author, repoName, version)
 	if err != nil {
 		return err
